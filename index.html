@@ -1,153 +1,37 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steel Brainrot - Генератор ключей</title>
+    <title>Steel Brainrot Keys</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #0c0c0c, #1a1a2e);
-            color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #00ff88;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(0,255,136,0.5);
-        }
-        .key-display {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid #00ff88;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 24px;
-            font-weight: bold;
-            color: #00ff88;
-            text-align: center;
-            word-break: break-all;
-        }
-        .btn {
-            background: linear-gradient(45deg, #00ff88, #00ccff);
-            border: none;
-            border-radius: 8px;
-            color: black;
-            padding: 15px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        .timer {
-            font-size: 18px;
-            color: #ff4444;
-            margin: 15px 0;
-            text-align: center;
-        }
+        body { background: #111; color: white; text-align: center; padding: 50px; }
+        .key { color: #0f0; font-size: 24px; margin: 20px; padding: 20px; border: 2px solid #0f0; }
+        button { background: #0f0; color: black; padding: 15px 30px; border: none; margin: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔑 Steel Brainrot Key Generator</h1>
-        
-        <div class="key-display" id="keyDisplay">
-            Нажмите "Сгенерировать ключ"
-        </div>
-        
-        <div class="timer" id="timer">
-            --:--:--
-        </div>
-
-        <div style="text-align: center;">
-            <button class="btn" onclick="generateKey()">🎲 Сгенерировать ключ</button>
-            <button class="btn" onclick="copyKey()">📋 Копировать ключ</button>
-        </div>
-
-        <div style="margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-            <h3>📖 Инструкция:</h3>
-            <ol style="margin-left: 20px; line-height: 1.6;">
-                <li>Сгенерируйте ключ</li>
-                <li>Скопируйте его</li>
-                <li>Используйте в скрипте Steel Brainrot</li>
-                <li>Ключ действителен 24 часа</li>
-            </ol>
-        </div>
-    </div>
+    <h1>🔑 Steel Brainrot Key Generator</h1>
+    <div class="key" id="key">Loading...</div>
+    <button onclick="generateKey()">Generate Key</button>
+    <button onclick="copyKey()">Copy Key</button>
 
     <script>
         function generateKey() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let key = '';
-            
-            for (let i = 0; i < 19; i++) {
-                if (i === 4 || i === 9 || i === 14) {
-                    key += '-';
-                } else {
-                    key += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            for(let i = 0; i < 16; i++) {
+                if(i > 0 && i % 4 === 0) key += '-';
+                key += chars[Math.floor(Math.random() * chars.length)];
             }
-            
-            document.getElementById('keyDisplay').textContent = key;
-            
-            // Запуск таймера на 24 часа
-            startTimer(24 * 60 * 60);
+            document.getElementById('key').textContent = key;
         }
-
-        function startTimer(duration) {
-            let timer = duration, hours, minutes, seconds;
-            const timerElement = document.getElementById('timer');
-            
-            const interval = setInterval(function () {
-                hours = Math.floor(timer / 3600);
-                minutes = Math.floor((timer % 3600) / 60);
-                seconds = Math.floor(timer % 60);
-                
-                timerElement.textContent = 
-                    hours.toString().padStart(2, '0') + ':' + 
-                    minutes.toString().padStart(2, '0') + ':' + 
-                    seconds.toString().padStart(2, '0');
-                
-                if (--timer < 0) {
-                    clearInterval(interval);
-                    timerElement.textContent = 'Ключ истек!';
-                    timerElement.style.color = '#ff4444';
-                }
-            }, 1000);
-        }
-
+        
         function copyKey() {
-            const key = document.getElementById('keyDisplay').textContent;
-            if (key !== 'Нажмите "Сгенерировать ключ"') {
-                navigator.clipboard.writeText(key).then(() => {
-                    alert('✅ Ключ скопирован!');
-                });
-            } else {
-                alert('❌ Сначала сгенерируйте ключ!');
-            }
+            const key = document.getElementById('key').textContent;
+            navigator.clipboard.writeText(key);
+            alert('Copied: ' + key);
         }
-
-        // Автогенерация при загрузке
-        window.onload = generateKey;
+        
+        generateKey();
     </script>
 </body>
 </html>
