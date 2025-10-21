@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Steal BrainRot Keys</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #ff5252;
+        }
+        .key {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+        }
+        .admin-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .key-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Steel BrainRot Keys</h1>
+        <p>Нажмите кнопку чтобы получить ключ</p>
+        
+        <button onclick="generateKey()">🎯 Получить ключ</button>
+        
+        <div id="keyDisplay" class="key" style="display:none;">
+            Ваш ключ: <span id="keyValue"></span>
+        </div>
+
+        <!-- Админ панель -->
+        <div class="admin-panel">
+            <h3>⚙️ Админ панель</h3>
+            <input type="password" id="adminPass" placeholder="Введите пароль админа">
+            <button onclick="loginAdmin()">Войти в админку</button>
+            
+            <div id="adminControls" style="display:none;">
+                <h4>🔧 Управление ключами</h4>
+                <button onclick="generateMultipleKeys()">🔑 Сгенерировать 10 ключей</button>
+                <button onclick="viewAllKeys()">📊 Показать все ключи</button>
+                <button onclick="updateKeyTxt()">💾 Обновить key.txt</button>
+                <button onclick="clearAllKeys()">🗑️ Удалить все ключи</button>
+                <div id="keysList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Хранилище ключей
+        let keys = JSON.parse(localStorage.getItem('brainrotKeys')) || [];
+        const ADMIN_PASSWORD = "Arhon1212@@";
+
+        // Генерация случайного ключа
+        function generateRandomKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = 'SB';
+            for (let i = 0; i < 12; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+
+        // Функция для скрытия ключа звездочками
+        function maskKey(key) {
+            if (key.length <= 4) return key;
+            return key.substring(0, 2) + '*'.repeat(key.length - 4) + key.substring(key.length - 2);
+        }
+
+        // Генерация одного ключа
+        function generateKey() {
+            const key = generateRandomKey();
+            keys.push({
+                key: key,
+                created: new Date().toLocaleString(),
+                used: false
+            });
+            localStorage.setItem('brainrotKeys', JSON.stringify(keys));
+            
+            document.getElementById('keyValue').textContent = key;
+            document.getElementById('keyDisplay').style.display = 'block';
+            
+            // Автоматически обновляем key.txt
+            updateKeyTxt();
+        }
+
+        // Админ функции
+        function loginAdmin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === ADMIN_PASSWORD) {
+                document.getElementById('adminControls').style.display = 'block';
+                document.getElementById('adminPass').value = '';
+                alert('✅ Админ доступ разрешен!');
+            } else {
+                alert('❌ Неверный пароль! Попробуйте снова.');
+            }
+        }
+
+        function generateMultipleKeys() {
+            for (let i = 0; i < 10; i++) {
+                const key = generateRandomKey();
+                keys.push({
+                    key: key,
+                    created: new Date().toLocaleString(),
+                    used: false
+                });
+            }
+            localStorage.setItem('brainrotKeys', JSON.stringify(keys));
+            updateKeyTxt();
+            alert('✅ 10 ключей сгенерировано и сохранено!');
+        }
+
+        function viewAllKeys() {
+            let keysList = '<h4>📊 Все ключи (' + keys.length + '):</h4>';
+            keys.forEach((keyObj, index) => {
+                const status = keyObj.used ? '❌ Использован' : '✅ Активен';
+                const maskedKey = maskKey(keyObj.key);
+                keysList += `
+                    <div class="key-item">
+                        <strong>${maskedKey}</strong><br>
+                        Создан: ${keyObj.created}<br>
+                        Статус: ${status}<br>
+                        <small>ID: ${index + 1}</small>
+                    </div>
+                `;
+            });
+            document.getElementById('keysList').innerHTML = keysList;
+        }
+
+        // Обновление файла key.txt (симуляция)
+        function updateKeyTxt() {
+            if (keys.length > 0) {
+                // Берем последний сгенерированный ключ для key.txt
+                const currentKey = keys[keys.length - 1].key;
+                
+                // В реальности здесь был бы код для сохранения на сервер
+                // Для GitHub Pages мы можем только показать какой ключ должен быть в key.txt
+                document.getElementById('keysList').innerHTML = `
+                    <div class="key-item">
+                        <h4>💾 Текущий ключ в key.txt:</h4>
+                        <strong>${currentKey}</strong><br>
+                        <small>Скопируйте этот ключ в файл key.txt на GitHub</small>
+                    </div>
+                `;
+                
+                // Создаем ссылку для скачивания key.txt
+                const blob = new Blob([currentKey], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = 'key.txt';
+                downloadLink.textContent = '📥 Скачать key.txt';
+                downloadLink.style.display = 'block';
+                downloadLink.style.margin = '10px';
+                downloadLink.style.padding = '10px';
+                downloadLink.style.background = 'rgba(255,255,255,0.2)';
+                downloadLink.style.borderRadius = '5px';
+                downloadLink.style.color = 'white';
+                downloadLink.style.textDecoration = 'none';
+                
+                document.getElementById('keysList').appendChild(downloadLink);
+            }
+        }
+
+        function clearAllKeys() {
+            if (confirm('⚠️ Вы уверены что хотите удалить ВСЕ ключи?')) {
+                keys = [];
+                localStorage.setItem('brainrotKeys', JSON.stringify(keys));
+                document.getElementById('keysList').innerHTML = '<p>✅ Все ключи удалены!</p>';
+            }
+        }
+
+        // Показываем последний ключ при загрузке
+        window.onload = function() {
+            if (keys.length > 0) {
+                document.getElementById('keyDisplay').style.display = 'block';
+                document.getElementById('keyValue').textContent = keys[keys.length - 1].key;
+            }
+        }
+    </script>
+</body>
+</html
