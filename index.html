@@ -2,36 +2,243 @@
 <html>
 <head>
     <title>Steel Brainrot Keys</title>
+    <meta charset="UTF-8">
     <style>
-        body { background: #111; color: white; text-align: center; padding: 50px; }
-        .key { color: #0f0; font-size: 24px; margin: 20px; padding: 20px; border: 2px solid #0f0; }
-        button { background: #0f0; color: black; padding: 15px 30px; border: none; margin: 10px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0f0f0f; 
+            color: white; 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 50px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ff88;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .key-box {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            font-size: 1.4em;
+            color: #00ff88;
+            word-break: break-all;
+            min-height: 80px;
+        }
+        .btn {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        .timer {
+            font-size: 1.2em;
+            color: #ff4444;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .status {
+            font-size: 1.1em;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .status.ready {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+        }
+        .status.waiting {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+        }
     </style>
 </head>
 <body>
-    <h1>🔑 Steel Brainrot Key Generator</h1>
-    <div class="key" id="key">Loading...</div>
-    <button onclick="generateKey()">Generate Key</button>
-    <button onclick="copyKey()">Copy Key</button>
+    <div class="container">
+        <h1>🔑 Steel Brainrot Key Generator</h1>
+        
+        <div class="status" id="status">Ready to generate key</div>
+        
+        <div class="key-box" id="keyDisplay">
+            Press Generate Key
+        </div>
+        
+        <div class="timer" id="timer">
+            --:--:--
+        </div>
+
+        <div>
+            <button class="btn" id="generateBtn" onclick="generateKey()">🎲 Generate Key</button>
+            <button class="btn" id="copyBtn" onclick="copyKey()">📋 Copy Key</button>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #1a1a1a; border-radius: 10px;">
+            <h3>📖 Instructions:</h3>
+            <p>1. Generate key (once per 24 hours)</p>
+            <p>2. Copy to clipboard</p>
+            <p>3. Use in Steel Brainrot script</p>
+            <p>4. Next key available in 24 hours</p>
+        </div>
+    </div>
 
     <script>
-        function generateKey() {
-            let key = '';
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            for(let i = 0; i < 16; i++) {
-                if(i > 0 && i % 4 === 0) key += '-';
-                key += chars[Math.floor(Math.random() * chars.length)];
+        let currentTimer;
+        const COOLDOWN_HOURS = 24;
+        
+        // Проверяем можно ли генерировать ключ
+        function canGenerateKey() {
+            const lastGeneration = localStorage.getItem('lastKeyGeneration');
+            if (!lastGeneration) return true;
+            
+            const lastTime = parseInt(lastGeneration);
+            const currentTime = new Date().getTime();
+            const hoursPassed = (currentTime - lastTime) / (1000 * 60 * 60);
+            
+            return hoursPassed >= COOLDOWN_HOURS;
+        }
+        
+        // Получаем оставшееся время
+        function getRemainingTime() {
+            const lastGeneration = localStorage.getItem('lastKeyGeneration');
+            if (!lastGeneration) return 0;
+            
+            const lastTime = parseInt(lastGeneration);
+            const currentTime = new Date().getTime();
+            const hoursPassed = (currentTime - lastTime) / (1000 * 60 * 60);
+            const remainingHours = COOLDOWN_HOURS - hoursPassed;
+            
+            return Math.max(0, remainingHours);
+        }
+        
+        // Обновляем интерфейс
+        function updateUI() {
+            const generateBtn = document.getElementById('generateBtn');
+            const status = document.getElementById('status');
+            
+            if (canGenerateKey()) {
+                generateBtn.disabled = false;
+                status.textContent = '✅ Ready to generate new key';
+                status.className = 'status ready';
+                document.getElementById('timer').textContent = 'Ready!';
+            } else {
+                generateBtn.disabled = true;
+                const remaining = getRemainingTime();
+                const hours = Math.floor(remaining);
+                const minutes = Math.floor((remaining - hours) * 60);
+                status.textContent = `⏳ Next key available in: ${hours}h ${minutes}m`;
+                status.className = 'status waiting';
+                startCooldownTimer(remaining * 3600);
             }
-            document.getElementById('key').textContent = key;
         }
         
+        // Таймер обратного отсчета
+        function startCooldownTimer(duration) {
+            clearInterval(currentTimer);
+            let timer = duration;
+            const timerElement = document.getElementById('timer');
+            
+            currentTimer = setInterval(function () {
+                const hours = Math.floor(timer / 3600);
+                const minutes = Math.floor((timer % 3600) / 60);
+                const seconds = Math.floor(timer % 60);
+                
+                timerElement.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                timerElement.style.color = '#ff4444';
+                
+                if (--timer < 0) {
+                    clearInterval(currentTimer);
+                    updateUI();
+                }
+            }, 1000);
+        }
+        
+        // Генерация ключа
+        function generateKey() {
+            if (!canGenerateKey()) {
+                alert('❌ Please wait 24 hours before generating new key!');
+                return;
+            }
+            
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = '';
+            
+            for (let i = 0; i < 19; i++) {
+                if (i === 4 || i === 9 || i === 14) {
+                    key += '-';
+                } else {
+                    key += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+            }
+            
+            // Сохраняем время генерации
+            localStorage.setItem('lastKeyGeneration', new Date().getTime().toString());
+            localStorage.setItem('currentKey', key);
+            
+            document.getElementById('keyDisplay').textContent = key;
+            updateUI();
+            alert('✅ New key generated! Valid for 24 hours');
+        }
+        
+        // Копирование ключа
         function copyKey() {
-            const key = document.getElementById('key').textContent;
-            navigator.clipboard.writeText(key);
-            alert('Copied: ' + key);
+            const key = document.getElementById('keyDisplay').textContent;
+            if (key !== 'Press Generate Key' && key !== 'No key generated') {
+                navigator.clipboard.writeText(key).then(() => {
+                    alert('✅ Key copied to clipboard!');
+                }).catch(() => {
+                    // Fallback
+                    const textArea = document.createElement('textarea');
+                    textArea.value = key;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('✅ Key copied!');
+                });
+            } else {
+                alert('❌ Generate key first!');
+            }
         }
         
-        generateKey();
+        // Восстановление ключа при загрузке
+        function loadCurrentKey() {
+            const savedKey = localStorage.getItem('currentKey');
+            if (savedKey) {
+                document.getElementById('keyDisplay').textContent = savedKey;
+            } else {
+                document.getElementById('keyDisplay').textContent = 'No key generated';
+            }
+        }
+
+        // Инициализация
+        window.onload = function() {
+            loadCurrentKey();
+            updateUI();
+        }
     </script>
 </body>
 </html>
